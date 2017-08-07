@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "jasmine",
     "start": "node server/main.js"
   },
   "author": "",
@@ -15,5 +15,8 @@
     "fs": "0.0.1-security",
     "http": "0.0.0",
     "url": "^0.11.0"
+  },
+  "devDependencies": {
+    "jasmine": "^2.7.0"
   }
 }

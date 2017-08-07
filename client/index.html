@@ -2,10 +2,11 @@
 <html>
 <head>
     <meta charset="utf-8">
-
+    <link href="https://fonts.googleapis.com/css?family=Montserrat" rel="stylesheet">
     <title>My page title</title>
     <link href="https://fonts.googleapis.com/css?family=Open+Sans+Condensed:300|Sonsie+One" rel="stylesheet"
           type="text/css">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
     <link rel="stylesheet" href="style.css">
     <script src="http://code.jquery.com/jquery-1.6.4.min.js"></script>
 
@@ -15,7 +16,7 @@
     <![endif]-->
 </head>
 
-<body>
+<body onload="onload()">
 <style>
     /* || General setup */
 
@@ -24,15 +25,21 @@
         padding: 0;
         height: 100%;
         width: 100%;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+        align-items: stretch;
+        align-content: stretch;
     }
 
     html {
         font-size: 10px;
-        background-color: lightgrey;
+        background: #f3f3f4;
+        font-family: 'Montserrat', sans-serif;
     }
 
     header {
-        background-color: darkslategray;
+        background-color: #2f4050;
         padding: 10px;
 
     }
@@ -43,28 +50,36 @@
     }
 
     main {
-        height: calc(100% - 72px);
+        /*height: calc(100% - 72px);*/
+        display: flex;
         /*margin-top: -12px;*/
+        flex: 1;
     }
 
     aside {
-        float: left;
         height: 100%;
-        background-color: darkseagreen;
-        width: 20%;
+        background-color: #1ab394;
+        flex: 1;
+    }
+
+    .title {
+        font-size: 24px;
+        color: #676a6c;
+        font-weight: normal;
     }
 
     article {
         height: calc(100% - 20px);
-        float: left;
-        width: 77%;
+        flex: 6;
         padding: 10px;
         position: relative;
+        display: flex;
     }
 
     .comment {
         width: 80%;
         position: relative;
+        margin: 10px 0;
     }
 
     img.circle {
@@ -80,17 +95,16 @@
         margin-left: 40px;
         display: inline-block;
         border-radius: 5px;
-        border: 1px solid #333333;
+        border: 1px solid lightgrey;
+        background-color: #fff;
         padding: 5px;
         width: 50%;
         min-height: 50px;
+        position: relative;
     }
 
-    .form {
-        position: absolute;
-        bottom: 0;
-        left: 0;
-        right: 0;;
+    .user-text:hover {
+        background-color: #ccc;
     }
 
     .comment .close {
@@ -99,7 +113,22 @@
         right: 10px;
         top: 10px;
         cursor: pointer;
+        font-size: 10px;
+        cursor: pointer;
     }
+
+    .padder {
+        padding: 15px 15px 15px 0;
+        display: flex;
+        flex: 1;
+        flex-direction: column;
+    }
+
+    .outer-messages {
+        flex: 5;
+    }
+
+
 </style>
 <style>
     /* The Modal (background) */
@@ -143,40 +172,62 @@
     .save {
         background-color: greenyellow;
     }
+    .fa.fa-envelope-o{
+        font-size: 14px;
+        margin-right: 5px;
+        color: fuchsia;
+    }
+    .form{
+        display: flex;
+    }
+    .form textarea{
+        flex: 1;
+        border-radius: 5px;
+        border: 1px solid #ccc;
+        min-height: 70px;
+    }
+    .f-r{
+        position: absolute;
+        right: 10px;
+        top: 60px;
+    }
 </style>
 
-
-<!-- Here is our main header that is used across all the pages of our website -->
-
 <header>
-    <img src="http://www.freepngimg.com/download/chat/6-2-chat-png-file.png" class="logo">
+    <!--<img src="./chat.png" class="logo">-->
+
 </header>
 
-
-<!-- Here is our page's main content -->
 <main>
     <aside>
 
     </aside>
-    <!-- It contains an article -->
     <article>
+        <div class="padder">
+            <div class="outer-messages">
+                <h2 class="title">Vegans</h2>
+                <div class="f-r">
+                    <!--<i class="fa fa-users users"></i><span class="users"></span>-->
+                    <i  class="fa fa-envelope-o"></i><span class="envelope"></span>
+                </div>
 
-        <h2>Vegans</h2>
-
-        <ul id="message-list">
+                <ul id="message-list">
 
 
-        </ul>
-
-        <div class="form">
-
-            <textarea id="output" style="width: 100%;"></textarea>
-
-            <div>
-                <button id="btnSend">Send</button>
+                </ul>
             </div>
-            <div style="clear: both"></div>
-            </p>
+            <div class="outer-form">
+                <div class="form">
+
+                    <textarea id="output"></textarea>
+
+                    <div>
+                        <button id="btnSend">Send</button>
+                    </div>
+                    <div style="clear: both"></div>
+                    </p>
+                </div>
+            </div>
         </div>
     </article>
 
@@ -222,114 +273,161 @@
 
 </div>
 <script>
-    var babble = {
-        currentMessage: '',
-        userInfo: {name: '', email: ''}
+    var poll = function () {
+        $.getJSON('/messages?count=' + counter, function (response) {
+            counter = response.count;
+
+
+
+            document.getElementsByClassName('envelope')[0].innerHTML = counter;
+
+
+            var messages = response.messages;
+
+            $("ul#message-list").empty();
+
+            messages.forEach(function (m) {
+
+                var li = '';
+                li += '<li>' + '<div class="comment">';
+
+
+                li += '<img src="' + m.pic + '" class="circle" alt="">' +
+                    '<span class="user-text">'
+                if (m.email == babble.userInfo.email) {
+                    li += '<div class="close" onclick="deleteM(' + m.id + ')">X</div>';
+                }
+                li += '<cite>' + m.email + ' </cite> <small>' + m.time + '</small><br>' + m.text +
+                    '</span>' +
+                    '</div>' +
+                    '</li>';
+                $("ul#message-list").append(li);
+            });
+
+            setTimeout(poll, 0);
+        });
     };
 
-    var modal = document.getElementById('myModal');
 
-    // Get the button that opens the modal
+    //GLOBALS
+    var counter = 0;
+    var babble = {
+        currentMessage: '',
+        userInfo: {name: '', email: '', pic: ''},
+        getMessages: poll,
+        postMessage: function () {
+            var text = document.getElementById('output').value;
+            var m = {text: text, email: babble.userInfo.email, pic: babble.userInfo.pic};
+            $.ajax({
+                type: "POST",
+                url: '/messages',
+                data: JSON.stringify({msg: m}),
+                contentType: "application/json",
+                success: function (response) {
+                    var messages = response.messages;
+                    $("ul#message-list").empty();
+                    messages.forEach(function (m) {
+
+                        var li = '';
+                        li += '<li>' + '<div class="comment">';
+
+
+                        li += '<img src="' + m.pic + '" class="circle" alt="">' +
+                            '<span class="user-text">'
+                        if (m.email == babble.userInfo.email) {
+                            li += '<div class="close" onclick="deleteM(' + m.id + ')">X</div>';
+                        }
+                        li += '<cite>' + m.email + ' </cite> <small>' + m.time + '</small><br>' + m.text +
+                            '</span>' +
+                            '</div>' +
+                            '</li>';
+                        $("ul#message-list").append(li);
+                    });
+                },
+                dataType: 'json'
+            });
+        },
+        deleteMessage: function (id) {
+            $.ajax({
+                type: "DELETE",
+                url: '/messages/' + id,
+                data: {},
+                contentType: "application/json",
+                success: function (response) {
+                    var messages = response.messages;
+                    $("ul#message-list").empty();
+                    messages.forEach(function (m) {
+
+                        var li = '';
+                        li += '<li>' + '<div class="comment">';
+
+
+                        li += '<img src="' + m.pic + '" class="circle" alt="">' +
+                            '<span class="user-text">'
+                        if (m.email == babble.userInfo.email) {
+                            li += '<div class="close" onclick="deleteM(' + m.id + ')">X</div>';
+                        }
+                        li += '<cite>' + m.email + ' </cite> <small>' + m.time + '</small><br>' + m.text +
+                            '</span>' +
+                            '</div>' +
+                            '</li>';
+                        $("ul#message-list").append(li);
+                    });
+                },
+                dataType: 'json'
+            });
+        }
+    };
+
+    function onload() {
+        babble.getMessages();
+    }
+
+    //MODAL ACTIONS
+    var modal = document.getElementById('myModal');
     var btnSave = document.getElementById("save");
     var btnstayAnym = document.getElementById("stayAnym");
     var btnSend = document.getElementById("btnSend");
-
-    // Get the <span> element that closes the modal
     var span = document.getElementsByClassName("close")[0];
 
     btnSend.onclick = function () {
-        var text = document.getElementById('output').value;
-        var m = {text: text, email: babble.userInfo.email};
-        $.ajax({
-            type: "POST",
-            url: '/messages',
-            data: JSON.stringify({msg: m}),
-            contentType: "application/json",
-            success: function (res) {
-
-            },
-            dataType: 'json'
-        });
+        babble.postMessage();
     };
-    // When the user clicks on the button, open the modal
+
     btnSave.onclick = function () {
         babble.userInfo.name = document.getElementById('username').value;
         babble.userInfo.email = document.getElementById('email').value;
         localStorage.babble = JSON.stringify(babble);
         modal.style.display = "none";
+        babble.userInfo.pic = 'http://lorempixel.com/400/200/';
     };
 
     btnstayAnym.onclick = function () {
         babble.userInfo.name = 'Anonimous';
         babble.userInfo.email = 'Anonimous';
+        babble.userInfo.pic = 'https://lh3.googleusercontent.com/-N294SjwwBis/VTQMgKDyn1I/AAAAAAAAAGc/cXzpVMOfW30/w1600-h1600/Anonymous_mask-3.jpg';
 
         localStorage.babble = JSON.stringify(babble);
 
         modal.style.display = "none";
     };
 
-    modal.style.display = "block";
+    if(!localStorage.babble){
+        modal.style.display = "block";
+    }
 
-    // When the user clicks on <span> (x), close the modal
     span.onclick = function () {
         modal.style.display = "none";
     };
 
-    // When the user clicks anywhere outside of the modal, close it
-    //    window.onclick = function (event) {
-    //        if (event.target == modal) {
-    //            modal.style.display = "none";
-    //        }
-    //    }
-function deleteMessage(id) {
-    $.ajax({
-        type: "DELETE",
-        url: '/messages/'+id,
-        data: {},
-        contentType: "application/json",
-        success: function (res) {
+    function deleteM(id) {
+        babble.deleteMessage(id);
+    }
 
-        },
-        dataType: 'json'
-    });
-
-}
+    poll();
 
 </script>
 
-<script>
 
-    $(function () {
-        var counter = 0;
-        var poll = function () {
-            $.getJSON('/messages?count=' + counter, function (response) {
-                counter = response.count;
-                var messages = response.messages;
-                $("ul#message-list").empty();
-                messages.forEach(function (m) {
-
-                    var li = '';
-                    li += '<li>' + '<div class="comment">';
-
-                    if (m.email == babble.userInfo.email) {
-                        li += '<div class="close" onclick="deleteMessage('+m.id +')">X</div>';
-                    }
-
-                    li += '<img src="" class="circle" alt="">' +
-                        '<span class="user-text">' + m.text + '</span>' +
-                        '</div>' +
-                        '</li>';
-                    $("ul#message-list").append(li);
-                });
-
-                setTimeout(poll, 0);
-            });
-        };
-
-        poll();
-
-    });
-
-</script>
 </body>
 </html>
